@@ -124,6 +124,7 @@ def grab_metadata():
 
     shortcuts = state.shortcuts
     id_dict = {}
+
     for _, k in enumerate(shortcuts):
         # grab metadata
         shortcut = shortcuts[k]

@@ -240,25 +240,6 @@ def delete_shortcut():
     update_shortcut_list(current_shortcuts)
 
 
-def delete_shortcut():
-    appids = get_selected_appids()
-    shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
-    current_shortcuts = get_existing_shortcuts(shortcuts_path)
-
-    indecies = []
-
-    for appid in appids:
-        indecies.append(get_shortcut_id_by_appid(appid))
-
-    for indx in indecies:
-        deleted = current_shortcuts.pop(indx, None)
-        if deleted is None:
-            logger.info(f"Failed to delete item #{indx}")
-
-    set_new_shortcuts(current_shortcuts, shortcuts_path)
-    update_shortcut_list(current_shortcuts)
-
-
 def extract_app_name(exe_path: str) -> str:
     system = platform.system()
 
