@@ -62,8 +62,6 @@ def add_new_shortcut(path: str, name: str = ""):
 
         set_new_shortcuts()
 
-        set_new_shortcuts(current_shortcuts, shortcuts_path)
-
 
 def get_shortcuts_dict(shortcuts_list: QTableWidget) -> dict[str, dict[str, str | int]]:
     headers = [

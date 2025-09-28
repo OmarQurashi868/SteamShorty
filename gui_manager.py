@@ -77,6 +77,9 @@ def init_main_window():
     table = window.findChild(QTableWidget, "shortcutsList")
     table.cellChanged.connect(shortcut_manager.on_cell_changed)  # type: ignore
 
+    window.metadataButton.clicked.connect(grab_metadata)  # type: ignore
+    window.configButton.clicked.connect(init_setup_window)  # type: ignore
+
     window.show()
 
 
@@ -185,8 +188,10 @@ def get_selected_appids() -> list[int]:
 
     for idx in shortcuts_list.selectionModel().selectedRows():
         row = idx.row()
-        selected_shortcuts.add(row)
-    return selected_shortcuts
+        item = shortcuts_list.item(row, appid_col)
+        if item:
+            appids.append(item.text())
+        return appids
 
 
 def popup(window: QWidget, title: str, text: str):
@@ -214,6 +219,25 @@ def add_exe():
     update_shortcut_list(new_shortcuts)
 
     state.window.statusBar().showMessage(f'"{app_name}" was added successfully')  # type: ignore
+
+
+def delete_shortcut():
+    appids = get_selected_appids()
+    shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
+    current_shortcuts = get_existing_shortcuts(shortcuts_path)
+
+    indecies = []
+
+    for appid in appids:
+        indecies.append(get_shortcut_id_by_appid(appid))
+
+    for indx in indecies:
+        deleted = current_shortcuts.pop(indx, None)
+        if deleted is None:
+            logger.info(f"Failed to delete item #{indx}")
+
+    set_new_shortcuts(current_shortcuts, shortcuts_path)
+    update_shortcut_list(current_shortcuts)
 
 
 def delete_shortcut():
