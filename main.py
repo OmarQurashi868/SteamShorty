@@ -26,6 +26,8 @@ def main():
     shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
     state.shortcuts = shortcut_manager.get_existing_shortcuts(shortcuts_path)
     logger.info("Found %i shortcut entries", len(state.shortcuts))
+    shortcuts = shortcut_manager.get_existing_shortcuts(shortcuts_path)
+    
 
     # Display the list
     success = gui_manager.update_shortcut_list(state.shortcuts)

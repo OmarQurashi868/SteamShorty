@@ -68,6 +68,9 @@ def init_main_window():
     add_button = window.findChild(QPushButton, "addButton")
     add_button.clicked.connect(add_exe)  # type: ignore
 
+    delete_button = window.findChild(QPushButton, "deleteButton")
+    delete_button.clicked.connect(delete_shortcut)  # type: ignore
+
     config_button = window.findChild(QPushButton, "configButton")
     config_button.clicked.connect(init_setup_window)  # type: ignore
 
@@ -166,17 +169,30 @@ def update_shortcut_list(shortcuts: dict[str, Any]) -> bool:
     return True
 
 
-def get_selected_rows() -> set[int]:
-    selected_shortcuts = set()
+def get_selected_appids() -> list[int]:
+    appids = list()
 
     shortcuts_list = state.window.findChild(QTableWidget, "shortcutsList")
     if not shortcuts_list:
-        return selected_shortcuts
+        return appids
+
+    for i in range(shortcuts_list.columnCount()):
+        if shortcuts_list.horizontalHeaderItem(i).text() == "AppId":
+            appid_col = i
+            break
+        if appid_col is None:
+            return appids
 
     for idx in shortcuts_list.selectionModel().selectedRows():
         row = idx.row()
         selected_shortcuts.add(row)
     return selected_shortcuts
+
+
+def popup(window: QWidget, title: str, text: str):
+    dlg = QDialog(window)
+    dlg.setWindowTitle(title)
+    dlg.exec()
 
 
 def add_exe():
@@ -196,7 +212,27 @@ def add_exe():
     shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
     new_shortcuts = shortcut_manager.get_existing_shortcuts(shortcuts_path)
     update_shortcut_list(new_shortcuts)
+
     state.window.statusBar().showMessage(f'"{app_name}" was added successfully')  # type: ignore
+
+
+def delete_shortcut():
+    appids = get_selected_appids()
+    shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
+    current_shortcuts = get_existing_shortcuts(shortcuts_path)
+
+    indecies = []
+
+    for appid in appids:
+        indecies.append(get_shortcut_id_by_appid(appid))
+
+    for indx in indecies:
+        deleted = current_shortcuts.pop(indx, None)
+        if deleted is None:
+            logger.info(f"Failed to delete item #{indx}")
+
+    set_new_shortcuts(current_shortcuts, shortcuts_path)
+    update_shortcut_list(current_shortcuts)
 
 
 def extract_app_name(exe_path: str) -> str:

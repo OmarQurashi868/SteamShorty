@@ -62,17 +62,18 @@ def add_new_shortcut(path: str, name: str = ""):
 
         set_new_shortcuts()
 
+        set_new_shortcuts(current_shortcuts, shortcuts_path)
+
 
 def get_shortcuts_dict(shortcuts_list: QTableWidget) -> dict[str, dict[str, str | int]]:
     headers = [
-        shortcuts_list.horizontalHeaderItem(i).text()
+        shortcuts_list.horizontalHeaderItem(i).text()  # type: ignore
         for i in range(shortcuts_list.columnCount())
     ]  # type: ignore
     # NOTE: the original main branch returned inside the loop (likely a bug).
     # Here’s a safe version that reads all rows into a dict keyed by row index.
     data: dict[str, dict[str, str | int]] = {}
     for row in range(shortcuts_list.rowCount()):
-        row_dict: dict[str, str | int | None] = {}
         row_dict: dict[str, str | int | None] = {}
         for col, header in enumerate(headers):
             item = shortcuts_list.item(row, col)
