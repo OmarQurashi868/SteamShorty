@@ -8,6 +8,7 @@ from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
     QDialogButtonBox,
     QFileDialog,
     QPushButton,
@@ -70,6 +71,9 @@ def init_main_window():
 
     delete_button = window.findChild(QPushButton, "deleteButton")
     delete_button.clicked.connect(delete_shortcut)  # type: ignore
+
+    delete_button = window.findChild(QPushButton, "deleteButton")
+    delete_button.clicked.connect(delete_shortcuts)  # type: ignore
 
     config_button = window.findChild(QPushButton, "configButton")
     config_button.clicked.connect(init_setup_window)  # type: ignore
@@ -172,7 +176,7 @@ def update_shortcut_list(shortcuts: dict[str, Any]) -> bool:
     return True
 
 
-def get_selected_rows() -> set[int]:
+def get_selected_appids() -> set[int]:
     selected_shortcuts = set()
 
     shortcuts_list = state.window.findChild(QTableWidget, "shortcutsList")
@@ -181,10 +185,10 @@ def get_selected_rows() -> set[int]:
 
     for idx in shortcuts_list.selectionModel().selectedRows():
         row = idx.row()
-        item = shortcuts_list.item(row, appid_col)
+        item = shortcuts_list.item(row, 0)
         if item:
-            appids.append(item.text())
-        return appids
+            selected_shortcuts.add(item.text())
+    return selected_shortcuts
 
 
 def popup(window: QWidget, title: str, text: str):
@@ -231,6 +235,19 @@ def delete_shortcut():
 
     set_new_shortcuts(current_shortcuts, shortcuts_path)
     update_shortcut_list(current_shortcuts)
+
+
+def delete_shortcuts():
+    appids = get_selected_appids()
+
+    for appid in appids:
+        shortcut_id = get_shortcut_id_by_appid(str(appid))
+        deleted = state.shortcuts.pop(shortcut_id, None)
+        if deleted is None:
+            logger.info(f"Failed to delete item #{appid}")
+
+    set_new_shortcuts()
+    update_shortcut_list(state.shortcuts)
 
 
 def extract_app_name(exe_path: str) -> str:
