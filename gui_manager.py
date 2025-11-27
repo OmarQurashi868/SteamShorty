@@ -1,22 +1,26 @@
+import logging
+import os
+import platform
 import sys
+from typing import Any
 
 import qdarktheme
-import state
-import logging
-import os
-import platform
-from typing import Tuple, Any
-import path_manager
-import logging
-import os
-import platform
-from typing import Tuple
-import metadata_manager
-import shortcut_manager
-from PySide6.QtWidgets import QWidget, QApplication, QTableWidget, QHeaderView, QAbstractItemView, QTableWidgetItem, QDialog, QPushButton, QFileDialog, QDialogButtonBox
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
-from setup_manager import is_steam_exists, on_path_change, confirm_config
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialogButtonBox,
+    QFileDialog,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+)
+
+import metadata_manager
+import path_manager
+import shortcut_manager
+import state
+from setup_manager import confirm_config, is_steam_exists, on_path_change
 
 try:
     import win32api
@@ -26,10 +30,13 @@ except ImportError:
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 
+
 def init_main_window():
     app = QApplication()
     # Dark theme
-    qdarktheme.setup_theme(theme="auto", corner_shape="sharp", additional_qss="QToolTip { border: 0px; }")
+    qdarktheme.setup_theme(
+        theme="auto", corner_shape="sharp", additional_qss="QToolTip { border: 0px; }"
+    )
     app.setPalette(qdarktheme.load_palette())
 
     state.app = app
@@ -45,22 +52,23 @@ def init_main_window():
         sys.exit(-1)
 
     state.window = window
-    window.statusBar().showMessage("Welcome to SteamShorty!") # type: ignore
+    window.statusBar().showMessage("Welcome to SteamShorty!")  # type: ignore
 
     # Set buttons
     metadata_button = window.findChild(QPushButton, "metadataButton")
-    metadata_button.clicked.connect(metadata_manager.grab_metadata) # type: ignore
+    metadata_button.clicked.connect(metadata_manager.grab_metadata)  # type: ignore
 
     add_button = window.findChild(QPushButton, "addButton")
-    add_button.clicked.connect(add_exe) # type: ignore
+    add_button.clicked.connect(add_exe)  # type: ignore
 
     config_button = window.findChild(QPushButton, "configButton")
-    config_button.clicked.connect(init_setup_window) # type: ignore
+    config_button.clicked.connect(init_setup_window)  # type: ignore
 
     table = window.findChild(QTableWidget, "shortcutsList")
-    table.cellChanged.connect(shortcut_manager.on_cell_changed) # type: ignore
+    table.cellChanged.connect(shortcut_manager.on_cell_changed)  # type: ignore
 
     window.show()
+
 
 def init_setup_window():
     ui_file = QFile("ui/config_window.ui")
@@ -78,36 +86,40 @@ def init_setup_window():
     window.setWindowFlags(window.windowFlags() & ~Qt.WindowType.WindowCloseButtonHint)
 
     # Load config into fields
-    window.pathField.setText(state.steam_path) # type: ignore
+    window.pathField.setText(state.steam_path)  # type: ignore
     if is_steam_exists(state.steam_path):
-        window.pathLabel.setText("Steam installation found") # type: ignore
-        window.pathLabel.setStyleSheet(f"color: {"green"};") # type: ignore
+        window.pathLabel.setText("Steam installation found")  # type: ignore
+        window.pathLabel.setStyleSheet(f"color: {'green'};")  # type: ignore
 
-    window.apiField.setText(state.api_key) # type: ignore
+    window.apiField.setText(state.api_key)  # type: ignore
 
     users = path_manager.get_steam_users(state.steam_path)
-    window.userSelect.addItems(users) # type: ignore
+    window.userSelect.addItems(users)  # type: ignore
     if state.user in users:
-        window.userSelect.setCurrentIndex(users.index(state.user)) # type: ignore
+        window.userSelect.setCurrentIndex(users.index(state.user))  # type: ignore
 
     if is_steam_exists(state.steam_path) and users:
-        window.buttonBox.setEnabled(True) # type: ignore
+        window.buttonBox.setEnabled(True)  # type: ignore
 
-    window.pathField.textChanged.connect(on_path_change) # type: ignore
-    ok_button = window.buttonBox.button(QDialogButtonBox.StandardButton.Ok) # type: ignore
+    window.pathField.textChanged.connect(on_path_change)  # type: ignore
+    ok_button = window.buttonBox.button(QDialogButtonBox.StandardButton.Ok)  # type: ignore
     ok_button.clicked.connect(confirm_config)
 
-    window.browseButton.clicked.connect(set_browsed_path) # type: ignore
-    
+    window.browseButton.clicked.connect(set_browsed_path)  # type: ignore
+
     # Window setup
     window.setWindowModality(Qt.WindowModality.ApplicationModal)
     window.show()
-    window.setFocus() # So no child takes first focus
+    window.setFocus()  # So no child takes first focus
+
 
 def set_browsed_path():
-    path = QFileDialog.getExistingDirectory(state.window, "Select Steam folder", state.steam_path)
+    path = QFileDialog.getExistingDirectory(
+        state.window, "Select Steam folder", state.steam_path
+    )
     if path:
-        state.config_window.pathField.setText(path) # type: ignore
+        state.config_window.pathField.setText(path)  # type: ignore
+
 
 def update_shortcut_list(shortcuts: dict[str, Any]) -> bool:
     shortcuts_list = state.window.findChild(QTableWidget, "shortcutsList")
@@ -134,15 +146,18 @@ def update_shortcut_list(shortcuts: dict[str, Any]) -> bool:
                 item.setToolTip(str(entry[entry_columns[col_idx]]))
             if col == "AppId":
                 # signed int -> unsigned int
-                entry[entry_columns[col_idx]] = str(int(entry[entry_columns[col_idx]]) + (1 << 32))
-            
+                entry[entry_columns[col_idx]] = str(
+                    int(entry[entry_columns[col_idx]]) + (1 << 32)
+                )
+
             value = entry.get(entry_columns[col_idx], "")
             item.setText(str(value))
             shortcuts_list.setItem(row_idx, col_idx, item)
-    
+
     shortcuts_list.sortItems(1, Qt.SortOrder.AscendingOrder)
     shortcuts_list.blockSignals(False)
     return True
+
 
 def get_selected_rows() -> set[int]:
     selected_shortcuts = set()
@@ -150,18 +165,16 @@ def get_selected_rows() -> set[int]:
     shortcuts_list = state.window.findChild(QTableWidget, "shortcutsList")
     if not shortcuts_list:
         return selected_shortcuts
-    
+
     for idx in shortcuts_list.selectionModel().selectedRows():
         row = idx.row()
         selected_shortcuts.add(row)
     return selected_shortcuts
 
+
 def add_exe():
     exe_path, _ = QFileDialog.getOpenFileName(
-        state.window,
-        "Select Executable",
-        "",
-        "Executable Files (*.exe)"
+        state.window, "Select Executable", "", "Executable Files (*.exe)"
     )
 
     exe_path = os.path.normpath(exe_path)
@@ -176,7 +189,8 @@ def add_exe():
     shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
     new_shortcuts = shortcut_manager.get_existing_shortcuts(shortcuts_path)
     update_shortcut_list(new_shortcuts)
-    state.window.statusBar().showMessage(f"\"{app_name}\" was added successfully") # type: ignore
+    state.window.statusBar().showMessage(f'"{app_name}" was added successfully')  # type: ignore
+
 
 def extract_app_name(exe_path: str) -> str:
     system = platform.system()
@@ -184,9 +198,9 @@ def extract_app_name(exe_path: str) -> str:
     if system == "Windows" and win32api:
         try:
             info = win32api.GetFileVersionInfo(exe_path, "\\")
-            lang, codepage = list(info['StringFileInfo'].keys())[0] # type: ignore
-            metadata = info['StringFileInfo'][(lang, codepage)] # type: ignore
-            return metadata.get('FileDescription') or metadata.get('ProductName') or ""
+            lang, codepage = list(info["StringFileInfo"].keys())[0]  # type: ignore
+            metadata = info["StringFileInfo"][(lang, codepage)]  # type: ignore
+            return metadata.get("FileDescription") or metadata.get("ProductName") or ""
         except Exception:
             pass
 

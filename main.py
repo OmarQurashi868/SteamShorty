@@ -1,13 +1,15 @@
-import sys
-import state
-import path_manager
-import shortcut_manager
-import gui_manager
-import setup_manager
 import logging
+import sys
+
+import gui_manager
+import path_manager
+import setup_manager
+import shortcut_manager
+import state
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
+
 
 def main():
     logger.info("Initializing...")
@@ -33,6 +35,6 @@ def main():
 
     sys.exit(state.app.exec())
 
+
 if __name__ == "__main__":
     main()
-
