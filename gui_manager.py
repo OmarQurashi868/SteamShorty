@@ -172,19 +172,12 @@ def update_shortcut_list(shortcuts: dict[str, Any]) -> bool:
     return True
 
 
-def get_selected_appids() -> list[int]:
-    appids = list()
+def get_selected_rows() -> set[int]:
+    selected_shortcuts = set()
 
     shortcuts_list = state.window.findChild(QTableWidget, "shortcutsList")
     if not shortcuts_list:
-        return appids
-
-    for i in range(shortcuts_list.columnCount()):
-        if shortcuts_list.horizontalHeaderItem(i).text() == "AppId":
-            appid_col = i
-            break
-        if appid_col is None:
-            return appids
+        return selected_shortcuts
 
     for idx in shortcuts_list.selectionModel().selectedRows():
         row = idx.row()
