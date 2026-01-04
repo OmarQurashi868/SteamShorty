@@ -4,7 +4,6 @@ import platform
 import sys
 from typing import Any
 
-import qdarktheme
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (
@@ -12,6 +11,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QPushButton,
+    QStyleFactory,
     QTableWidget,
     QTableWidgetItem,
 )
@@ -33,11 +33,18 @@ logger = logging.getLogger()
 
 def init_main_window():
     app = QApplication()
-    # Dark theme
-    qdarktheme.setup_theme(
-        theme="auto", corner_shape="sharp", additional_qss="QToolTip { border: 0px; }"
-    )
-    app.setPalette(qdarktheme.load_palette())
+
+    # 1. Check for the best available style
+    available_styles = QStyleFactory.keys()
+
+    if "Breeze" in available_styles:
+        app.setStyle("Breeze")  # Native KDE
+    elif "Windows11" in available_styles:
+        app.setStyle("Windows11")  # Native Modern Windows
+    elif "WindowsVista" in available_styles:
+        app.setStyle("WindowsVista")  # Standard Windows
+    else:
+        app.setStyle("Fusion")  # Safe fallback
 
     state.app = app
 
@@ -127,14 +134,14 @@ def update_shortcut_list(shortcuts: dict[str, Any]) -> bool:
         return False
     shortcuts_list.blockSignals(True)
 
-    columns = ["AppId", "AppName", "Image", "Path"]
-    entry_columns = ["appid", "AppName", "Icon", "Exe"]
+    columns = ["AppId", "AppName", "Path"]
+    entry_columns = ["appid", "AppName", "Exe"]
 
     # shortcuts_list.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
     # shortcuts_list.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
     # shortcuts_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
     shortcuts_list.setRowCount(len(shortcuts))
-    shortcuts_list.setColumnCount(4)
+    shortcuts_list.setColumnCount(3)
     shortcuts_list.setHorizontalHeaderLabels(columns)
 
     for row_idx, entry in enumerate(shortcuts.values()):

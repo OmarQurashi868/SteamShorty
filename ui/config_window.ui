@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <ui version="4.0">
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
-    <height>260</height>
+    <width>480</width>
+    <height>320</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,14 +21,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>320</width>
-    <height>260</height>
+    <width>480</width>
+    <height>320</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>320</width>
-    <height>260</height>
+    <width>480</width>
+    <height>320</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -48,7 +48,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <widget class="QComboBox" name="userSelect"/>
+       <widget class="QComboBox" name="userSelect" />
       </item>
      </layout>
     </widget>
@@ -78,7 +78,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QLineEdit" name="pathField"/>
+         <widget class="QLineEdit" name="pathField" />
         </item>
         <item>
          <widget class="QPushButton" name="browseButton">
@@ -109,14 +109,14 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLineEdit" name="apiField"/>
+       <widget class="QLineEdit" name="apiField" />
       </item>
      </layout>
     </widget>
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources />
  <connections>
   <connection>
    <sender>buttonBox</sender>
