@@ -81,6 +81,7 @@ def on_cell_changed(row, col):
     shortcut_id = get_shortcut_id_by_appid(app_id)
     if shortcut_id == -1:
         logger.error("Invalid cell changed")
+        return
 
     state.shortcuts[shortcut_id]["AppName"] = state.window.shortcutsList.item(row, 1).text() # type: ignore
     set_new_shortcuts()

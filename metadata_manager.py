@@ -129,7 +129,7 @@ def grab_metadata():
 
         # Download images
         grid_path = path_manager.get_grid_path(state.steam_path, state.user)
-        grid_id = int(shortcut["appid"]) & 0xFFFFFFFF
+        grid_id = int(shortcut["appid"]) & 0xFFFFFFFF # type: ignore
         hero_path = os.path.join(grid_path, f"{str(grid_id)}_hero.png")
         download_image(f"{url}/heroes/game/{game_id}", hero_path)
 
