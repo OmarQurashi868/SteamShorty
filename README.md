@@ -29,7 +29,7 @@ To install SteamShorty, follow these steps:
    ```
  
 > [!NOTE]
-> If you are on linux:
+> If you are on linux, do this instead:
 > Install these 2 packages manually:
 > ```
 > pip install Requests vdf
