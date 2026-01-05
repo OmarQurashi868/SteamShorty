@@ -62,7 +62,7 @@ def download_image(url: str, save_path: str) -> bool:
         path += ".png"
     elif mimetype == "image/webp":
         path += ".webp"
-    elif mimetype == "image/vnd.microsoft.icon":
+    elif mimetype == "image/x-icon":
         path += ".ico"
     else:
         logger.error("Unsupported image type: %s", mimetype)
@@ -151,22 +151,31 @@ def grab_metadata():
 
         # Hero
         hero_path = os.path.join(grid_path, f"{str(grid_id)}_hero")
-        download_image(f"{url}/heroes/game/{game_id}", hero_path)
+        # download_image(f"{url}/heroes/game/{game_id}", hero_path)
 
         # Cover
         cover_path = os.path.join(grid_path, f"{str(grid_id)}p")
-        download_image(f"{url}/grids/game/{game_id}?dimensions=600x900", cover_path)
+        # download_image(f"{url}/grids/game/{game_id}?dimensions=600x900", cover_path)
 
         # Wide
         wide_path = os.path.join(grid_path, f"{str(grid_id)}")
-        download_image(
-            f"{url}/grids/game/{game_id}?dimensions=920x430,460x215", wide_path
-        )
+        # download_image(
+        #     f"{url}/grids/game/{game_id}?dimensions=920x430,460x215", wide_path
+        # )
 
         # Logo
         logo_path = os.path.join(grid_path, f"{str(grid_id)}_logo")
-        download_image(f"{url}/logos/game/{game_id}", logo_path)
+        # download_image(f"{url}/logos/game/{game_id}", logo_path)
 
+        # Icon
+        icon_path = os.path.join(grid_path, f"{str(grid_id)}_icon")
+        download_image(f"{url}/icons/game/{game_id}", icon_path)
+        if os.path.exists(f"{icon_path}.png"):
+            state.shortcuts[k]["icon"] = f"{icon_path}.png"
+        elif os.path.exists(f"{icon_path}.ico"):
+            state.shortcuts[k]["icon"] = f"{icon_path}.ico"
+
+    print(state.shortcuts)
     shortcut_manager.set_new_shortcuts()
     gui_manager.update_shortcut_list(state.shortcuts)
     # Update shortcuts
