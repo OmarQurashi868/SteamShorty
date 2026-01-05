@@ -16,7 +16,10 @@ logger = logging.getLogger()
 def download_image(url: str, save_path: str) -> bool:
     headers = {"Authorization": f"Bearer {state.api_key}"}
     try:
-        r = requests.get(url + "?limit=1", headers=headers)
+        limit = "?limit=1"
+        if url.__contains__("?"):
+            limit = "&limit=1"
+        r = requests.get(url + limit, headers=headers)
     except Exception as exc:
         logger.error("Failed to query image metadata for %s: %s", save_path, exc)
         return False
@@ -51,14 +54,28 @@ def download_image(url: str, save_path: str) -> bool:
         logger.error("Image download returned %s for %s", img.status_code, img_url)
         return False
 
+    mimetype = img.headers.get("Content-Type")
+    path = save_path
+    if mimetype == "image/jpeg":
+        path += ".jpg"
+    elif mimetype == "image/png":
+        path += ".png"
+    elif mimetype == "image/webp":
+        path += ".webp"
+    elif mimetype == "image/vnd.microsoft.icon":
+        path += ".ico"
+    else:
+        logger.error("Unsupported image type: %s", mimetype)
+        return False
+
     # Ensure the target directory exists (create recursively if needed)
-    dirpath = os.path.dirname(save_path)
+    dirpath = os.path.dirname(path)
     if dirpath:
         os.makedirs(dirpath, exist_ok=True)
 
     # Write the image to disk
     try:
-        with open(save_path, "wb") as f:
+        with open(path, "wb") as f:
             for chunk in img.iter_content(8192):
                 if chunk:
                     f.write(chunk)
@@ -70,13 +87,13 @@ def download_image(url: str, save_path: str) -> bool:
 
     # After successful download, remove any other files with the same base name but different extension
     try:
-        base_dir = os.path.dirname(save_path) or "."
+        base_dir = os.path.dirname(path) or "."
         base_name = os.path.splitext(os.path.basename(save_path))[0]
         for fname in os.listdir(base_dir):
             fbase, fext = os.path.splitext(fname)
             # If same base name but different filename than the one we just saved -> delete it
             if fbase == base_name and os.path.join(base_dir, fname) != os.path.normpath(
-                save_path
+                path
             ):
                 try:
                     os.remove(os.path.join(base_dir, fname))
@@ -124,14 +141,31 @@ def grab_metadata():
         game_id = game["id"]
         game_name = game["name"]
 
+        # TODO: namelock?
         state.shortcuts[k]["AppName"] = game_name
         id_dict[shortcut["AppName"]] = game_id
 
         # Download images
         grid_path = path_manager.get_grid_path(state.steam_path, state.user)
-        grid_id = int(shortcut["appid"]) & 0xFFFFFFFF # type: ignore
-        hero_path = os.path.join(grid_path, f"{str(grid_id)}_hero.png")
+        grid_id = int(shortcut["appid"]) & 0xFFFFFFFF  # type: ignore
+
+        # Hero
+        hero_path = os.path.join(grid_path, f"{str(grid_id)}_hero")
         download_image(f"{url}/heroes/game/{game_id}", hero_path)
+
+        # Cover
+        cover_path = os.path.join(grid_path, f"{str(grid_id)}p")
+        download_image(f"{url}/grids/game/{game_id}?dimensions=600x900", cover_path)
+
+        # Wide
+        wide_path = os.path.join(grid_path, f"{str(grid_id)}")
+        download_image(
+            f"{url}/grids/game/{game_id}?dimensions=920x430,460x215", wide_path
+        )
+
+        # Logo
+        logo_path = os.path.join(grid_path, f"{str(grid_id)}_logo")
+        download_image(f"{url}/logos/game/{game_id}", logo_path)
 
     shortcut_manager.set_new_shortcuts()
     gui_manager.update_shortcut_list(state.shortcuts)
