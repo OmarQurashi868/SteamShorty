@@ -149,18 +149,25 @@ def grab_metadata():
         grid_path = path_manager.get_grid_path(state.steam_path, state.user)
         grid_id = int(shortcut["appid"]) & 0xFFFFFFFF  # type: ignore
 
-        # Hero
+        # Background / Hero
         hero_path = os.path.join(grid_path, f"{str(grid_id)}_hero")
-        download_image(f"{url}/heroes/game/{game_id}", hero_path)
+        download_image(
+            f"{url}/heroes/game/{game_id}?dimensions=1920x620,3840x1240&styles=alternate",
+            hero_path,
+        )
 
-        # Cover
+        # Cover / Grid (steam vertical)
         cover_path = os.path.join(grid_path, f"{str(grid_id)}p")
-        download_image(f"{url}/grids/game/{game_id}?dimensions=600x900", cover_path)
+        download_image(
+            f"{url}/grids/game/{game_id}?dimensions=600x900&styles=alternate",
+            cover_path,
+        )
 
-        # Wide
+        # Wide cover / Grid (steam horizontal)
         wide_path = os.path.join(grid_path, f"{str(grid_id)}")
         download_image(
-            f"{url}/grids/game/{game_id}?dimensions=920x430,460x215", wide_path
+            f"{url}/grids/game/{game_id}?dimensions=460x215,920x430&styles=alternate",
+            wide_path,
         )
 
         # Logo
