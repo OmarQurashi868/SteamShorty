@@ -81,7 +81,7 @@ def init_main_window():
     table = window.findChild(QTableWidget, "shortcutsList")
     table.cellChanged.connect(shortcut_manager.on_cell_changed)  # type: ignore
 
-    window.metadataButton.clicked.connect(grab_metadata)  # type: ignore
+    window.metadataButton.clicked.connect(metadata_manager.grab_metadata)  # type: ignore
     window.configButton.clicked.connect(init_setup_window)  # type: ignore
 
     window.show()
@@ -245,6 +245,8 @@ def delete_shortcuts():
         deleted = state.shortcuts.pop(shortcut_id, None)
         if deleted is None:
             logger.info(f"Failed to delete item #{appid}")
+
+    logger.info(f"Deleted {len(appids)} shortcuts")
 
     set_new_shortcuts()
     update_shortcut_list(state.shortcuts)
