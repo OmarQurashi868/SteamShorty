@@ -43,3 +43,15 @@ To install SteamShorty, follow these steps:
    ```
    python main.py
    ```
+
+# TODO
+- Delete button (artwork)
+- Delete confirm dialogue
+- Existance check (checksum/filename)
+- App images and other linux bins
+- Arguments, editable paths and args
+- Tooltips for all
+- Status bar freeze
+- Categories
+- Name lock?
+- Pyinstaller
