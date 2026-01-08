@@ -2,7 +2,6 @@ import logging
 import os
 
 import requests
-from PySide6.QtWidgets import QTableWidget
 
 import gui_manager
 import path_manager

@@ -1,14 +1,13 @@
 import logging
 import os
-import platform
 import sys
 from typing import Any
 
+import pefile
 from PySide6.QtCore import QFile, Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (
     QApplication,
-    QDialog,
     QDialogButtonBox,
     QFileDialog,
     QPushButton,
@@ -19,14 +18,15 @@ from PySide6.QtWidgets import (
 
 import metadata_manager
 import path_manager
-import shortcut_manager
 import state
 from setup_manager import confirm_config, is_steam_exists, on_path_change
-
-try:
-    import win32api
-except ImportError:
-    win32api = None
+from shortcut_manager import (
+    add_new_shortcut,
+    get_existing_shortcuts,
+    get_shortcut_id_by_appid,
+    on_cell_changed,
+    set_new_shortcuts,
+)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -70,16 +70,13 @@ def init_main_window():
     add_button.clicked.connect(add_exe)  # type: ignore
 
     delete_button = window.findChild(QPushButton, "deleteButton")
-    delete_button.clicked.connect(delete_shortcut)  # type: ignore
-
-    delete_button = window.findChild(QPushButton, "deleteButton")
     delete_button.clicked.connect(delete_shortcuts)  # type: ignore
 
     config_button = window.findChild(QPushButton, "configButton")
     config_button.clicked.connect(init_setup_window)  # type: ignore
 
     table = window.findChild(QTableWidget, "shortcutsList")
-    table.cellChanged.connect(shortcut_manager.on_cell_changed)  # type: ignore
+    table.cellChanged.connect(on_cell_changed)  # type: ignore
 
     window.metadataButton.clicked.connect(metadata_manager.grab_metadata)  # type: ignore
     window.configButton.clicked.connect(init_setup_window)  # type: ignore
@@ -191,10 +188,10 @@ def get_selected_appids() -> set[int]:
     return selected_shortcuts
 
 
-def popup(window: QWidget, title: str, text: str):
-    dlg = QDialog(window)
-    dlg.setWindowTitle(title)
-    dlg.exec()
+# def popup(window: QWidget, title: str, text: str):
+#     dlg = QDialog(window)
+#     dlg.setWindowTitle(title)
+#     dlg.exec()
 
 
 def add_exe():
@@ -209,32 +206,13 @@ def add_exe():
     logger.info("Selected exe path: %s", exe_path)
 
     app_name = extract_app_name(exe_path)
-    shortcut_manager.add_new_shortcut(exe_path, app_name)
+    add_new_shortcut(exe_path, app_name)
 
     shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
-    new_shortcuts = shortcut_manager.get_existing_shortcuts(shortcuts_path)
+    new_shortcuts = get_existing_shortcuts(shortcuts_path)
     update_shortcut_list(new_shortcuts)
 
     state.window.statusBar().showMessage(f'"{app_name}" was added successfully')  # type: ignore
-
-
-def delete_shortcut():
-    appids = get_selected_appids()
-    shortcuts_path = path_manager.get_shortcuts_path(state.steam_path, state.user)
-    current_shortcuts = get_existing_shortcuts(shortcuts_path)
-
-    indecies = []
-
-    for appid in appids:
-        indecies.append(get_shortcut_id_by_appid(appid))
-
-    for indx in indecies:
-        deleted = current_shortcuts.pop(indx, None)
-        if deleted is None:
-            logger.info(f"Failed to delete item #{indx}")
-
-    set_new_shortcuts(current_shortcuts, shortcuts_path)
-    update_shortcut_list(current_shortcuts)
 
 
 def delete_shortcuts():
@@ -253,15 +231,21 @@ def delete_shortcuts():
 
 
 def extract_app_name(exe_path: str) -> str:
-    system = platform.system()
+    try:
+        pe = pefile.PE(exe_path)
 
-    if system == "Windows" and win32api:
-        try:
-            info = win32api.GetFileVersionInfo(exe_path, "\\")
-            lang, codepage = list(info["StringFileInfo"].keys())[0]  # type: ignore
-            metadata = info["StringFileInfo"][(lang, codepage)]  # type: ignore
-            return metadata.get("FileDescription") or metadata.get("ProductName") or ""
-        except Exception:
-            pass
+        if hasattr(pe, "FileInfo"):
+            for file_info in pe.FileInfo:
+                if file_info.Key == b"StringFileInfo":
+                    for st in file_info.StringTable:
+                        for key, value in st.entries.items():
+                            if key == b"ProductName":
+                                return value.decode("utf-8")
+                            if key == b"FileDescription":
+                                return value.decode("utf-8")
+    except Exception:
+        pass
 
-    return os.path.splitext(os.path.basename(exe_path))[0]
+    # Fallback to filename
+    filename = os.path.splitext(os.path.basename(exe_path))[0]
+    return filename.replace("-", " ").replace("_", " ").title()
