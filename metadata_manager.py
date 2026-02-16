@@ -2,7 +2,6 @@ import logging
 import os
 
 import requests
-from PySide6.QtWidgets import QTableWidget
 
 import gui_manager
 import path_manager
@@ -124,6 +123,7 @@ def grab_metadata():
 
     shortcuts = state.shortcuts
     id_dict = {}
+
     for _, k in enumerate(shortcuts):
         # grab metadata
         shortcut = shortcuts[k]
